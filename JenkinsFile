@@ -1,0 +1,136 @@
+pipeline {
+    agent any
+    environment {
+        APP_NAME = "xlight7/ouitripsapp"
+    }
+
+    stages {
+        stage("Cleanup Workspace") {
+            steps {
+                cleanWs()
+            }
+        }
+
+        stage("Checkout from SCM") {
+            steps {
+                git branch: 'main', changelog: false, credentialsId: 'git_token', poll: false, url: 'https://github.com/Xliight/gitOps_CD.git'
+            }
+        }
+
+        stage("Update the Deployment Tags") {
+            steps {
+                sh """
+                   cd helmapp
+                   cat values.yaml
+                   sed -i 's|${APP_NAME}.*|${APP_NAME}:${IMAGE_TAG}|g' values.yaml
+                   cat values.yaml
+                """
+            }
+        }
+
+        stage("Push the changed deployment file to Git") {
+            steps {
+                sh """
+                   git config --global user.name "Xliight"
+                   git config --global user.email "abdomostme@gmail.com"
+                   cd helmapp
+                   git add values.yaml
+                   git commit -m "Updated values Manifest"
+                """
+                withCredentials([gitUsernamePassword(credentialsId: 'git_token', gitToolName: 'Default')]) {
+                    sh "git push https://github.com/Xliight/gitOps_CD.git main"
+                }
+            }
+        }
+        /**
+        stage('Notify Discord') {
+            steps {
+                script {
+                    def discordWebhookUrl = 'https://discord.com/api/webhooks/1313951323116404796/GqaDHcd_-bCUcseTb4RXXKFIUsvpZHy2qp_6nfU-IBNEr1SJhPHhIbr9U6g4cRqPqVNu'
+                    def buildStatus = currentBuild.result ?: 'SUCCESS' // Default to 'SUCCESS' if no result is set
+                    def message = """
+                        {
+                        "content": "Build #${env.BUILD_NUMBER} CD has Failed with status: ${buildStatus} ",
+                            "username": "Jenkins :) "
+                        }
+                    """
+                    // Sending POST request to Discord
+                    httpRequest acceptType: 'APPLICATION_JSON', 
+                                contentType: 'APPLICATION_JSON', 
+                                url: discordWebhookUrl, 
+                                httpMode: 'POST', 
+                                requestBody: message
+                }
+            }
+        }**/
+    }
+
+    post {
+        success {
+            script {
+                def discordWebhookUrl = 'https://discord.com/api/webhooks/1313951323116404796/GqaDHcd_-bCUcseTb4RXXKFIUsvpZHy2qp_6nfU-IBNEr1SJhPHhIbr9U6g4cRqPqVNu'
+                def buildStatus = currentBuild.result ?: 'SUCCESS'
+                def message = """
+                    {
+                        "content": "Build #${env.BUILD_NUMBER} CD has finished with status: ${buildStatus} ",
+                        "username": "Jenkins Bot CD"
+                    }
+                """                    
+                httpRequest acceptType: 'APPLICATION_JSON', 
+                            contentType: 'APPLICATION_JSON', 
+                            url: discordWebhookUrl, 
+                            httpMode: 'POST', 
+                            requestBody: message
+            }
+        }
+        failure {
+            script {
+                def discordWebhookUrl = 'https://discord.com/api/webhooks/1313951323116404796/GqaDHcd_-bCUcseTb4RXXKFIUsvpZHy2qp_6nfU-IBNEr1SJhPHhIbr9U6g4cRqPqVNu'
+                def buildStatus = currentBuild.result ?: 'FAILURE'
+                def message = """
+                    {
+                        "content": "Build #${env.BUILD_NUMBER} CD has Finished with status: ${buildStatus} ",
+                        "username": "Jenkins Bot"
+                    }
+                """
+                httpRequest acceptType: 'APPLICATION_JSON', 
+                            contentType: 'APPLICATION_JSON', 
+                            url: discordWebhookUrl, 
+                            httpMode: 'POST', 
+                            requestBody: message
+            }
+        }
+        
+        always {
+          script {
+              def jobName = env.JOB_NAME
+              def buildNumber = env.BUILD_NUMBER
+              def pipelineStatus = currentBuild.result ?: 'UNKNOWN'
+              def bannerColor = pipelineStatus.toUpperCase() == 'SUCCESS' ? 'green' : 'red'
+  
+              def body = """
+                  <html>
+                  <body>
+                  <div style="border: 4px solid ${bannerColor}; padding: 10px;">
+                  <h2>${jobName} - Build ${buildNumber}</h2>
+                  <div style="background-color: ${bannerColor}; padding: 10px;">
+                  <h3 style="color: white;">Pipeline Status: ${pipelineStatus.toUpperCase()}</h3>
+                  </div>
+                  <p>Check the <a href="${BUILD_URL}">console output</a>.</p>
+                  </div>
+                  </body>
+                  </html>
+              """
+  
+              emailext (
+                  subject: "${jobName} - Build ${buildNumber} - ${pipelineStatus.toUpperCase()}",
+                  body: body,
+                  to: 'abdomostme@gmail.com',
+                  from: 'jenkins@xlight.com',
+                  replyTo: 'abdomostme@gmail.com',
+                  mimeType: 'text/html',
+              )
+            }
+        }
+    }
+}
