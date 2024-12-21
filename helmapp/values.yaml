@@ -5,7 +5,7 @@ postgres:
 
 springApp:
   image:
-    repository: xlight7/ouitripsapp:1.0.0-17
+    repository: xlight7/ouitripsapp:1.0.0-16
     pullPolicy: Always
 
 postgresVolume:
