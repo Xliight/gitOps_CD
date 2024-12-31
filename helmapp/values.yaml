@@ -1,0 +1,19 @@
+replicaCount: 2
+
+postgres:
+  databaseName: ouitripstest
+
+springApp:
+  image:
+    repository: xlight7/cynamoapp:1.0.0-22
+    pullPolicy: Always
+
+postgresVolume:
+  persistentVolumeClaim:
+    storageSize: 500Mi  #1Gi
+
+  persistentVolume:
+    storageSize: 1Gi  #1Gi
+    pathOnHost: /var/lib/postgresql/data  # Adjust this with your host machine's actual path
+
+  mountPath: /var/lib/postgresql/data

@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-spring-app-deployment
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      # The default value is 25%.
+      # maxUnavailable is an optional field that specifies the maximum number of Pods that can be unavailable during the update process.
+      maxUnavailable: 25% # The value can be an absolute number (for example, 5) or a percentage of desired Pods (for example, 10%). 
+      # maxSurge is an optional field that specifies the maximum number of Pods that can be created over the desired number of Pods.
+      maxSurge: 25%
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-spring-app
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-spring-app
+    spec:
+      containers:
+        - name: {{ .Release.Name }}-spring-app-container
+          image: {{ .Values.springApp.image.repository }}
+          imagePullPolicy: {{ .Values.springApp.image.pullPolicy }}
+          ports:
+            - containerPort: 30384
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: {{ include "my-spring-app.fullMySQLConnectionURL" . | quote }}
+
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-postgres-root-password
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-postgres-root-password
+                  key: password
+      imagePullSecrets:
+      - name: mine
