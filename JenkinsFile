@@ -13,7 +13,7 @@ pipeline {
 
         stage("Checkout from SCM") {
             steps {
-                git branch: 'main', changelog: false, credentialsId: 'git_token', poll: false, url: 'https://github.com/Xliight/gitOps_CD.git'
+                git branch: 'main', changelog: false, credentialsId: 'git_token', poll: false, url: 'https://github.com/Xliight/giitOps_CD.git'
             }
         }
 
