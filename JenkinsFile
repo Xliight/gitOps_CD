@@ -33,13 +33,13 @@ pipeline {
                 sh """
                    git config --global user.name "Xliight"
                    git config --global user.email "abdomostme@gmail.com"
-                   git pull origin main || true
+                   
                    cd helmapp
                    git add values.yaml
                    git commit -m "Updated values Manifest"
                 """
                 withCredentials([gitUsernamePassword(credentialsId: 'git_token', gitToolName: 'Default')]) {
-                    sh "git push https://github.com/Xliight/gitOps_CD.git main"
+                    sh "git push --force https://github.com/Xliight/gitOps_CD.git main"
                 }
             }
         }
