@@ -5,7 +5,7 @@ postgres:
 
 springApp:
   image:
-    repository: xlight7/cynamoapp:1.0.0-22
+    repository: xlight7/cynamoapp:1.0.0-23
     pullPolicy: Always
 
 postgresVolume:
