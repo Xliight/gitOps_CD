@@ -39,7 +39,7 @@ pipeline {
                    git commit -m "Updated values Manifest"
                 """
                 withCredentials([gitUsernamePassword(credentialsId: 'git_token', gitToolName: 'Default')]) {
-                    sh "git push https://github.com/Xliight/gitOps_CD.git main"
+                    sh "git push https://github.com/Xliight/giitOps_CD.git main"
                 }
             }
         }
