@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        APP_NAME = "xlight7/ouitripsapp"
+        APP_NAME = "xlight7/cynamoapp"
     }
 
     stages {
