@@ -34,7 +34,7 @@ pipeline {
                    git config --global user.name "Xliight"
                    git config --global user.email "abdomostme@gmail.com"
                    cd helmapp
-                   git pull origin main --rebase
+                   git pull origin 
                    git add values.yaml
                    git commit -m "Updated values Manifest"
                 """
